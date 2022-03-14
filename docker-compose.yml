@@ -7,6 +7,8 @@ services:
     working_dir: /python
     depends_on:
       - db
+    security_opt:
+      - label:disable
   db:
     image: postgres:10
     environment:
