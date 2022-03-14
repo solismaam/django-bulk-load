@@ -2,10 +2,13 @@ import csv
 from io import StringIO
 from typing import Any, Iterable, List, NamedTuple, Optional, Tuple, Type
 
+from psycopg2.extras import Json
+
+from django.contrib.gis.db.backends.postgis.adapter import PostGISAdapter
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.models.options import Options
-from psycopg2.extras import Json
 
 from .utils import NULL_CHARACTER
 
@@ -73,6 +76,10 @@ def models_to_tsv_buffer(
                 row.append(NULL_CHARACTER)
             elif isinstance(field_val, Json):
                 row.append(field_val.dumps(field_val.adapted))
+            elif isinstance(field_val, PostGISAdapter):
+                geom: GEOSGeometry = getattr(obj, include_field.attname, None)
+                if geom:
+                    row.append(bytes(geom.hexewkb).decode("utf-8"))
             else:
                 row.append(str(field_val))
         tsv_writer.writerow(row)
